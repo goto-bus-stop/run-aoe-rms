@@ -12,6 +12,7 @@ const debug = require('debug')('run-aoe-rms')
 const AOC_PATH = 'Age2_x1/age2_x1.exe'
 const RMS_PATH = 'Random'
 const RMS_BACKUP = '.run-aoe-rms-backup.Random'
+const RECORDING_PATH = 'SaveGame/rec.mgz'
 
 const headless = pify((...args) => {
   const cb = args.pop()
@@ -23,6 +24,12 @@ const headless = pify((...args) => {
 
 module.exports = runRandomMapScript
 
+/**
+ * Run a random map script string, creating a short recorded game.
+ *
+ * @param {string} source 
+ * @param {Object} options 
+ */
 async function runRandomMapScript (source, options = {}) {
   const { aocDir } = options
   const { xvfb, display } = await headless({
@@ -76,6 +83,8 @@ async function runRandomMapScript (source, options = {}) {
 
   await restoreRMSFolder()
   debug('restored folder')
+
+  return fs.readFile(path.join(basedir, RECORDING_PATH))
 
   async function prepareRMSFolder () {
     await del(path.join(aocDir, RMS_BACKUP), { force: true })
