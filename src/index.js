@@ -42,28 +42,38 @@ async function runRandomMapScript (source, options = {}) {
 
   const aoc = await spawnAoc()
   debug('assuming aoc is ready')
-  takeScreenshot('/tmp/main-menu.png')
 
   await openSinglePlayerMenu()
   debug('opened single player menu')
-  takeScreenshot('/tmp/single-player-menu.png')
 
   await openGameSetupScreen()
   debug('opened game setup screen')
-  takeScreenshot('/tmp/game-setup-screen.png')
 
   await selectRMSFile()
   debug('selected rms file')
-  takeScreenshot('/tmp/select-rms-file.png')
 
   await startGame()
   debug('started game')
+  takeScreenshot('/tmp/game-started.png')
 
-  await new Promise((resolve) => {
-    aoc.on('close', resolve)
-  })
+  debug('force-closing game')
+  await forceExit(aoc)
+  debug('closing xvfb')
+  await forceExit(xvfb)
 
-  exit()
+  function forceExit (cp) {
+    return new Promise((resolve) => {
+      const wait = setTimeout(() => {
+        cp.kill('SIGKILL')
+      }, 2000)
+
+      cp.on('exit', () => {
+        clearTimeout(wait)
+        resolve()
+      })
+      cp.kill('SIGTERM')
+    })
+  }
 
   await restoreRMSFolder()
   debug('restored folder')
@@ -157,10 +167,6 @@ async function runRandomMapScript (source, options = {}) {
     }
   }
 
-  function exit () {
-    xvfb.kill('SIGTERM')
-  }
-
   async function openSinglePlayerMenu () {
     click(370, 100)
     while (!isOpen()) {
@@ -187,5 +193,12 @@ async function runRandomMapScript (source, options = {}) {
 
   async function startGame () {
     click(120, 570)
+    while (!isOpen()) {
+      await delay(50)
+    }
+
+    function isOpen () {
+      return getColor(18, 13) === '#ffeba0'
+    }
   }
 }
