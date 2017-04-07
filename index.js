@@ -47,6 +47,10 @@ async function main (xvfb, num) {
   await startGame()
   debug('started game')
 
+  await new Promise((resolve) => {
+    aoc.on('exit', resolve)
+  })
+
   exit()
 
   async function prepareRMSFolder () {
@@ -134,12 +138,7 @@ async function main (xvfb, num) {
   }
 
   function exit () {
-    aoc.on('close', () => {
-      debug('exit xvfb')
-      xvfb.kill('SIGTERM')
-    })
-    debug('exit wine aoc')
-    aoc.kill('SIGTERM')
+    xvfb.kill('SIGTERM')
   }
 
   async function openSinglePlayerMenu () {
@@ -168,11 +167,6 @@ async function main (xvfb, num) {
 
   async function startGame () {
     click(120, 570)
-    debug('starting...')
-    for (let i = 0; i < 50; i++) {
-      takeScreenshot(`/tmp/starting-${i}.png`)
-      await delay(100)
-    }
   }
 }
 
