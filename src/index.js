@@ -35,6 +35,8 @@ module.exports = runRandomMapScript
  */
 async function runRandomMapScript (source, options = {}) {
   const { aocDir } = options
+
+  // Create a virtual frame buffer that AoC can use to render to.
   const { xvfb, display } = await headless({
     display: {
       width: 800,
@@ -43,9 +45,12 @@ async function runRandomMapScript (source, options = {}) {
     }
   })
 
+  // Set up an environment that will use the frame buffer as its main screen.
   const env = Object.assign({}, process.env, {
     DISPLAY: `:${display}.0`
   })
+
+  // Start a new game in AoC to run its map generation code.
 
   await prepareRMSFolder()
   debug('prepared folder')
@@ -70,24 +75,20 @@ async function runRandomMapScript (source, options = {}) {
   debug('closing xvfb')
   await forceExit(xvfb)
 
-  function forceExit (cp) {
-    return new Promise((resolve) => {
-      const wait = setTimeout(() => {
-        cp.kill('SIGKILL')
-      }, 2000)
-
-      cp.on('exit', () => {
-        clearTimeout(wait)
-        resolve()
-      })
-      cp.kill('SIGTERM')
-    })
-  }
-
   await restoreRMSFolder()
   debug('restored folder')
 
-  return fs.readFile(path.join(basedir, RECORDING_PATH))
+  // Read the recorded game file.
+  const recordedGamePath = path.join(aocDir, RECORDING_PATH)
+  const rec = await fs.readFile(recordedGamePath)
+  await del(recordedGamePath, { force: true })
+
+  // Add the header length to the recorded game file.
+  // AoC doesn't add this because we force-quit it.
+  const headerLen = rec.indexOf(Buffer.from([ 0xF4, 0x01, 0x00, 0x00 ]))
+  rec.writeInt32LE(headerLen, 0)
+
+  return rec
 
   // Util to get the color of a pixel in the frame buffer.
   function getColor (x, y) {
@@ -117,6 +118,20 @@ async function runRandomMapScript (source, options = {}) {
       'mousemove', x, y,
       'click', rightClick ? 2 : 1
     ], { env })
+  }
+
+  function forceExit (cp) {
+    return new Promise((resolve) => {
+      const wait = setTimeout(() => {
+        cp.kill('SIGKILL')
+      }, 2000)
+
+      cp.on('exit', () => {
+        clearTimeout(wait)
+        resolve()
+      })
+      cp.kill('SIGTERM')
+    })
   }
 
   async function prepareRMSFolder () {
