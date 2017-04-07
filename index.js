@@ -2,7 +2,7 @@ const path = require('path')
 const { spawn, spawnSync } = require('child_process')
 const { readFileSync } = require('fs')
 const pify = require('pify')
-const headless = require('headless')
+const headlessCb = require('headless')
 const delay = require('delay')
 const mv = pify(require('mv'))
 const fs = require('mz/fs')
@@ -15,11 +15,27 @@ const RMS_PATH = 'Random'
 const RMS_BACKUP = '.run-aoe-rms-backup.Random'
 const VIRT_SCREEN = 0
 
-const source = getSource()
+const headless = pify((...args) => {
+  const cb = args.pop()
+  headlessCb(...args, (err, xvfb, display) => {
+    if (err) cb(err)
+    else cb(null, { xvfb, display })
+  })
+})
 
-async function main (xvfb, num) {
+module.exports = runRandomMapScript
+
+async function runRandomMapScript (source) {
+  const { xvfb, display } = await headless({
+    display: {
+      width: 800,
+      height: 600,
+      depth: 24
+    }
+  })
+
   const env = Object.assign({}, process.env, {
-    DISPLAY: `:${num}.0`
+    DISPLAY: `:${display}.0`
   })
 
   await prepareRMSFolder()
@@ -99,7 +115,7 @@ async function main (xvfb, num) {
 
     // Grab one pixel and save it as a `.txt`.
     spawnSync('import', [
-      '-display', `:${num}`,
+      '-display', `:${display}`,
       '-window', 'root',
       '-crop', `1x1+${x}+${y}`,
       tmpFile
@@ -117,7 +133,7 @@ async function main (xvfb, num) {
   function takeScreenshot (saveAt = '/tmp/aoe.png') {
     debug('screenshot to', saveAt)
     spawnSync('import', [
-      '-display', `:${num}`,
+      '-display', `:${display}`,
       '-window', 'root',
       saveAt
     ])
@@ -176,18 +192,8 @@ async function main (xvfb, num) {
   }
 }
 
-headless({
-  display: {
-    width: 800,
-    height: 600,
-    depth: 24
-  }
-}, (err, xvfb, num) => {
-  main(xvfb, num).catch((err) => {
-    console.error(err.stack)
-  })
+runRandomMapScript(
+  readFileSync(path.join(__dirname, 'test.rms'), 'utf8')
+).catch((err) => {
+  console.error(err.stack)
 })
-
-function getSource () {
-  return readFileSync(path.join(__dirname, 'test.rms'), 'utf8')
-}
