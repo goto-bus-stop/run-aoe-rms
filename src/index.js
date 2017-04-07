@@ -27,8 +27,11 @@ module.exports = runRandomMapScript
 /**
  * Run a random map script string, creating a short recorded game.
  *
- * @param {string} source 
- * @param {Object} options 
+ * @param {string} source Random map script.
+ * @param {Object} options Options.
+ *    - `options.aocDir` - Installation directory of Age of Empires 2
+ *      (with UserPatch v1.4)
+ * @return {Buffer} The recorded game file contents.
  */
 async function runRandomMapScript (source, options = {}) {
   const { aocDir } = options
@@ -86,6 +89,36 @@ async function runRandomMapScript (source, options = {}) {
 
   return fs.readFile(path.join(basedir, RECORDING_PATH))
 
+  // Util to get the color of a pixel in the frame buffer.
+  function getColor (x, y) {
+    const tmpFile = '/tmp/color.txt'
+
+    // Grab one pixel and save it as a `.txt`.
+    spawnSync('import', [
+      '-display', `:${display}`,
+      '-window', 'root',
+      '-crop', `1x1+${x}+${y}`,
+      tmpFile
+    ])
+
+    // Extract the hex color value of the pixel.
+    const match = readFileSync(tmpFile, 'utf8')
+      .match(/#([0-9A-F]{2})..([0-9A-F]{2})..([0-9A-F]{2})../)
+    if (!match) {
+      return '#000000'
+    }
+    return `#${match.slice(1).join('')}`.toLowerCase()
+  }
+
+  // Util to click at a location in the frame buffer.
+  function click (x, y, rightClick = false) {
+    debug('click', x, y)
+    spawnSync('xdotool', [
+      'mousemove', x, y,
+      'click', rightClick ? 2 : 1
+    ], { env })
+  }
+
   async function prepareRMSFolder () {
     await del(path.join(aocDir, RMS_BACKUP), { force: true })
     await mv(path.join(aocDir, RMS_PATH), path.join(aocDir, RMS_BACKUP))
@@ -124,34 +157,6 @@ async function runRandomMapScript (source, options = {}) {
       // Check if the "Learn to Play" text is present.
       return getColor(18, 23) === '#d7d1b0'
     }
-  }
-
-  function getColor (x, y) {
-    const tmpFile = '/tmp/color.txt'
-
-    // Grab one pixel and save it as a `.txt`.
-    spawnSync('import', [
-      '-display', `:${display}`,
-      '-window', 'root',
-      '-crop', `1x1+${x}+${y}`,
-      tmpFile
-    ])
-
-    // Extract the hex color value of the pixel.
-    const match = readFileSync(tmpFile, 'utf8')
-      .match(/#([0-9A-F]{2})..([0-9A-F]{2})..([0-9A-F]{2})../)
-    if (!match) {
-      return '#000000'
-    }
-    return `#${match.slice(1).join('')}`.toLowerCase()
-  }
-
-  function click (x, y, rightClick = false) {
-    debug('click', x, y)
-    spawnSync('xdotool', [
-      'mousemove', x, y,
-      'click', rightClick ? 2 : 1
-    ], { env })
   }
 
   async function openGameSetupScreen () {
