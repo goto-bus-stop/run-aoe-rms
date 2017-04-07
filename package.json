@@ -1,0 +1,21 @@
+{
+  "name": "run-aoe-rms",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^2.6.3",
+    "del": "^2.2.2",
+    "delay": "^2.0.0",
+    "headless": "^1.2.0",
+    "mv": "^2.1.1",
+    "mz": "^2.6.0",
+    "pify": "^2.3.0"
+  }
+}
