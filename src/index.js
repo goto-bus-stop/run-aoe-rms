@@ -56,9 +56,6 @@ async function runRandomMapScript (source, options = {}) {
   debug('selected rms file')
   takeScreenshot('/tmp/select-rms-file.png')
 
-  await restoreRMSFolder()
-  debug('restored folder')
-
   await startGame()
   debug('started game')
 
@@ -67,6 +64,9 @@ async function runRandomMapScript (source, options = {}) {
   })
 
   exit()
+
+  await restoreRMSFolder()
+  debug('restored folder')
 
   async function prepareRMSFolder () {
     await del(path.join(aocDir, RMS_BACKUP), { force: true })
