@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "dependencies": {
+    "canvas": "^1.6.5",
+    "pify": "^2.3.0",
+    "recage": "^0.1.0"
+  }
+}
