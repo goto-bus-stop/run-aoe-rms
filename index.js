@@ -48,7 +48,7 @@ async function main (xvfb, num) {
   debug('started game')
 
   await new Promise((resolve) => {
-    aoc.on('exit', resolve)
+    aoc.on('close', resolve)
   })
 
   exit()
@@ -72,8 +72,14 @@ async function main (xvfb, num) {
       path.join(BASEDIR, AOC_PATH)
     ], {
       env,
-      cwd: BASEDIR,
-      stdio: 'inherit'
+      cwd: BASEDIR
+    })
+
+    cp.stdout.on('data', (line) => {
+      debug('aoc stdout', line.toString('utf8'))
+    })
+    cp.stderr.on('data', (line) => {
+      debug('aoc stderr', line.toString('utf8'))
     })
 
     while (!isReady()) {
