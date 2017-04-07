@@ -9,7 +9,6 @@ const fs = require('mz/fs')
 const del = require('del')
 const debug = require('debug')('run-aoe-rms')
 
-const BASEDIR = '/home/user/.wine/drive_c/aoc-up/'
 const AOC_PATH = 'Age2_x1/age2_x1.exe'
 const RMS_PATH = 'Random'
 const RMS_BACKUP = '.run-aoe-rms-backup.Random'
@@ -25,6 +24,7 @@ const headless = pify((...args) => {
 module.exports = runRandomMapScript
 
 async function runRandomMapScript (source, options = {}) {
+  const { aocDir } = options
   const { xvfb, display } = await headless({
     display: {
       width: 800,
@@ -69,26 +69,23 @@ async function runRandomMapScript (source, options = {}) {
   exit()
 
   async function prepareRMSFolder () {
-    await del(path.join(BASEDIR, RMS_BACKUP), { force: true })
-    await mv(path.join(BASEDIR, RMS_PATH), path.join(BASEDIR, RMS_BACKUP))
+    await del(path.join(aocDir, RMS_BACKUP), { force: true })
+    await mv(path.join(aocDir, RMS_PATH), path.join(aocDir, RMS_BACKUP))
 
-    await fs.mkdir(path.join(BASEDIR, RMS_PATH))
-    await fs.writeFile(path.join(BASEDIR, RMS_PATH, 'Current.rms'), source)
+    await fs.mkdir(path.join(aocDir, RMS_PATH))
+    await fs.writeFile(path.join(aocDir, RMS_PATH, 'Current.rms'), source)
   }
 
   async function restoreRMSFolder () {
-    await del(path.join(BASEDIR, RMS_PATH), { force: true })
-    await mv(path.join(BASEDIR, RMS_BACKUP), path.join(BASEDIR, RMS_PATH))
+    await del(path.join(aocDir, RMS_PATH), { force: true })
+    await mv(path.join(aocDir, RMS_BACKUP), path.join(aocDir, RMS_PATH))
   }
 
   async function spawnAoc () {
     debug('spawn wine aoc')
     const cp = spawn('wine', [
-      path.join(BASEDIR, AOC_PATH)
-    ], {
-      env,
-      cwd: BASEDIR
-    })
+      path.join(aocDir, AOC_PATH)
+    ], { env, cwd: aocDir })
 
     cp.stdout.on('data', (line) => {
       debug('aoc stdout', line.toString('utf8'))
