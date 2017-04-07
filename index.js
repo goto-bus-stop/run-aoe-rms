@@ -9,7 +9,7 @@ const fs = require('mz/fs')
 const del = require('del')
 const debug = require('debug')('run-aoe-rms')
 
-const BASEDIR = '/home/user/.wine/drive_c/Program Files (x86)/aoc/'
+const BASEDIR = '/home/user/.wine/drive_c/aoc-up/'
 const AOC_PATH = 'Age2_x1/age2_x1.exe'
 const RMS_PATH = 'Random'
 const RMS_BACKUP = '.run-aoe-rms-backup.Random'
@@ -128,7 +128,8 @@ async function main (xvfb, num) {
     }
 
     function isOpen () {
-      return getColor(36, 100) === '#b88851'
+      // The "Start Game" button text
+      return getColor(105, 563) === '#d7ca15'
     }
   }
 
