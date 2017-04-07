@@ -54,7 +54,6 @@ async function runRandomMapScript (source, options = {}) {
 
   await startGame()
   debug('started game')
-  takeScreenshot('/tmp/game-started.png')
 
   debug('force-closing game')
   await forceExit(aoc)
@@ -136,15 +135,6 @@ async function runRandomMapScript (source, options = {}) {
       return '#000000'
     }
     return `#${match.slice(1).join('')}`.toLowerCase()
-  }
-
-  function takeScreenshot (saveAt = '/tmp/aoe.png') {
-    debug('screenshot to', saveAt)
-    spawnSync('import', [
-      '-display', `:${display}`,
-      '-window', 'root',
-      saveAt
-    ])
   }
 
   function click (x, y, rightClick = false) {
