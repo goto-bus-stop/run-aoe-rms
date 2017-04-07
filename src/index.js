@@ -84,7 +84,9 @@ async function runRandomMapScript (source, options = {}) {
   async function spawnAoc () {
     debug('spawn wine aoc')
     const cp = spawn('wine', [
-      path.join(aocDir, AOC_PATH)
+      path.join(aocDir, AOC_PATH),
+      'NODXCHECK',
+      'FORCE800'
     ], { env, cwd: aocDir })
 
     cp.stdout.on('data', (line) => {
