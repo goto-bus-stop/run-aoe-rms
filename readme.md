@@ -1,5 +1,7 @@
 # run-aoe-rms
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/goto-bus-stop/run-aoe-rms.svg)](https://greenkeeper.io/)
+
 Run an Age of Empires 2 random map script, and get a recorded game file back.
 
 ## Install
